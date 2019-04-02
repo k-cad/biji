@@ -1,0 +1,137 @@
+函数的参数 
+    实参(给)
+      位置传参(序列传参)
+      关键字传参(字典关键字传参)
+    形参(接)
+      缺省参数(default argument)
+        def fx(a=0,b=2,c=3)
+            ...
+      形参的定义方式
+        位置形参
+        星号元组形参
+        命名关键字形参
+        双星号字典形参
+        def(a,b,*args,c,d,**kwargs)
+            ...
+
+
+全局变量和局部变量
+    局部变量 local
+    全局变量 global
+        创建用赋值语句
+        销毁用del语句
+    
+两个函数 globals(),locals() 返回全局变量和局部变量
+
+day10 笔记
+函数变量
+     函数名是变量，他在创建时绑定一个函数
+     示例 def f1():
+             print("f1函数被调用")
+    f2=f1 两个变量同时绑定一个函数
+    f2()  f1函数被调用
+      示例：
+         def f1():
+             print('f1')
+         def f2():
+             print('f2')
+         f1,f2=f2,f1
+         f1()#f2
+一个函数可以作为另个函数的实参传递
+    示例：
+    function_as_agrs1.py
+    function_as_agrs2.py
+练习 
+def myinput(fn):
+     L=[1,3,5,7,9]
+     return fn(L)
+
+myinput(max)
+myinput(min)
+myinput(sum)
+
+
+函数可以作为另一个函数的返回值
+  示例：
+      function_as_return_value.py
+
+
+函数的嵌套定义
+    函数的嵌套定义是指一个函数用def语句创建其他函数的情况
+    示例：function_embed_def.py
+python 作用域
+    作用域也叫名字空间，是访问变量时查找变量名的范围空间
+    示例：a=100
+    def fx():
+        a=10000
+        print(a)
+    fx()
+    print(a)
+    python的四个作用域 LEGB
+        作用域                 英文解释             英文缩写
+    局部作用域(函数内)         local(function)          L
+    外部嵌套函数作用域         Enclosing function local E
+    函数定义所在模块的作用域    Global(module)           G
+    python内置模块作用域      Builtin(python)           B
+    示例 ： namespace.py
+
+    变量名的查找规则
+        在访问变量时，先查找本地变量，然后是包裹此函数外部的子数内部的变量
+        之后是全局变量
+        最后是内置变量
+        L E G B
+        在默认的情况下，变量名赋值会创建或改变本地作用域的变量
+    
+    global语句
+    作用:告诉解释执行器global语句声明的一个或多个变量，这些变量的作用域
+    为模块机的作用域，也称作全局变量
+    全局声明(global)将赋值变量映射到模块文件内部的作用域
+    语法：
+        global 变量1，变量2，...
+    示例；
+        global ga,gl
+        global gc
+    示例见：global.py
+    说明：
+        1,全局变量如果要在函数内部被赋值，则必须经过全局声明(否则会被认为是局部变量)
+        2,全局变量在函数内部不经过声明就可以直接访问(变量已经存在并关联一个对象)
+        3,不能先声明局部变量，再用global声明为全局变量,此做法不合规则
+        4，global变量列表里的变量名不能出现在函数的形参列表内
+练习：
+    用全局变量函数fx引用的次数
+    caic_call_name.py
+
+nonlocal 语句
+    作用：
+        告诉解释进行器nonlocal声明的变量不是局部变量，也不是全局变量，
+        而是外部嵌套函数内的变量
+    语法：
+        nonlocal 变量名1，变量名2，...
+    示例见：
+        nonlocal.py
+    说明：
+        1,nonlocal语句只能在被嵌套函数内部进行使用
+        2,对nonlocal变量进行赋值将对外部嵌套函数作用域内的变量进行操作
+        3,当有两层或两层以上的嵌套时，访问nonlocal变量只对最近一层进行操作
+        4，nonlocal变量列表里的变量名不能出现在函数的形参列表内
+问题：
+    def 语句的作用是创建函数并用变量名绑定这个函数
+    lambda 表达式(又称匿名函数)
+    作用：
+        创建一个匿名函数对象
+        同def 类型，但不提供函数名
+    语法：
+        lambda[函数形式列表]：表达式
+    示例见：
+        lambad.py
+    说明：lambda 表达式创建的函数只能包含一条表达式
+         lambda 比函数简单且可以随时创建和销毁，有利于减少程序的偶合度
+练习：见lambada.py
+
+eval() 和 exec()
+    eval(source globals=None,locals=None) 把一个字符串source
+    当成一个表达式来执行，返回表达式执行后的结果
+    exec(source globals=None,locals=None) 吧一个字符串source 
+    当成一个程序来执行
+eval示例见： eval.py
+exec示例见： exec.py

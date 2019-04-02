@@ -1,0 +1,20 @@
+import time
+y=int(input('year'))
+m=int(input('month'))
+d=int(input('day'))
+birthday=(y,m,d,0,0,0,0,0,0)
+t=time.mktime(birthday)
+s=time.time()-t
+ds=t/60/60//24
+print(ds,'days')
+birthday_tuple=time.localtime(t)
+weeks={
+    0:'周一',
+    1:'周二',
+    2:'周三',
+    3:'周四',
+    4:'周五',
+    5:'周六',
+    6:'周日'
+}
+print('出生那天是：',weeks[birthday_tuple[6]])

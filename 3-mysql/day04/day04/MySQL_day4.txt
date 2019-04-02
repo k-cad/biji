@@ -1,0 +1,343 @@
+课程：MySQL关系型数据库
+进度：day4
+
+上次内容回顾
+
+1. 子查询：一个查询语句中，嵌套了另
+   一个查询
+   select * from orders where amt >
+   (select avg(amt) from orders);
+
+2. 联合查询：将多个表的数据进行查询，
+   返回一个结果集（二维表）
+   
+   笛卡尔积：集合乘积，将集合中的元素
+             两两组合得到的新集合。逻辑
+			 含义是两个集合元素可能的
+			 组合
+   笛卡尔积和关系：笛卡尔积去掉没有
+      意义的数据就是关系
+
+   分类：内连接、外连接（左、右）
+   
+   内连接：关联不到的数据不显示
+   外连接：关联不到的数据也显示
+   
+   左连接：以左表为主，数据全部显示，
+           右表关联，关联不到的数据
+		   填写NULL
+   右连接：以右表为主，数据全部显示，
+           左表关联，关联不到的数据
+		   填写NULL
+		   
+3. 约束：数据的规则
+  - 非空约束：字段的值不能为空
+  - 唯一约束：字段的值不能重复
+  - 主键约束：非空、唯一
+  - 默认值：不赋值时系统自动填默认值
+  - 自增长：字段的值自动增加
+  - 外键约束：某个属性在当前表中不是
+    PK，在另外的表中是PK；添加外键约束
+	后，要求所参照的实体必须存在
+	
+今天的内容
+一、索引（重点）
+1. 什么是索引
+1）索引是一种提高查询(检索)效率的
+   技术，通过对数据表中一列或多列
+   排序，查询时避免全表扫描，从而
+   提高查询效率
+2）索引是一种数据结构（树状结构），
+   包含数据的存储位置（引用指针），
+   能根据该指针快速找到数据
+
+2. 索引的分类
+1）普通索引、唯一索引
+  - 普通索引：允许插入空值、允许重复
+  - 唯一索引：值不能重复，可以为空
+2）单列索引、复合索引
+  - 单列索引：一个索引只包含一列
+  - 复合索引：一个索引包含多列
+3）创建索引
+  - 建表时创建索引
+    语法：
+	index|unique|primary key(字段)	
+	说明：
+	index  普通索引
+	unique 唯一索引
+	primary key 主键，特殊唯一索引
+	
+    示例
+    create table index_test(
+	  id int primary key, 
+	  cert_no varchar(32),
+	  name varchar(32),
+	  unique(cert_no), -- 唯一索引
+	  index(name) -- 普通索引
+	);
+	查看：show index from index_test;
+	insert into index_test 
+	  values(1,'0001','Jerry');
+	  
+	-- 唯一索引不能重复，插入报错
+	insert into index_test 
+	  values(2,'0001','Tom');
+	  
+    -- 插入id值为NULL的数据，违反主键
+    -- 非空约束，报错
+    insert into index_test 
+	  values(NULL, '0002', 'Emma');
+
+  - 表创建后添加索引
+    语法：
+	create 索引类型 索引名称
+	on 表名(字段名)
+	
+	示例：
+	-- 先删除index_test表上名称为
+	-- cert_no的索引
+	drop index cert_no on index_test;
+	-- 再在index_test表的cert_no
+	-- 字段上创建名称为idx_cert_no
+	-- 的索引
+	create unique index idx_cert_no
+	on index_test(cert_no);
+	
+4）实验：
+  步骤
+  第一步：创建表或找一个已存在的表，
+  先确认该表无索引，利用现有的orders表
+  
+  第二步：利用脚本插入10万笔数据
+  见insert_orders_many.py
+  
+  第三步：无索引查询，记录查询时间
+	select * from orders 
+	  where order_id = '2018010100000002'; -- 0.08秒
+	select * from orders 
+	  where order_id = '2018010100055556'; -- 0.07秒
+	select * from orders 
+	  where order_id = '2018010100999994'; -- 0.08秒
+  
+  第四步：添加索引，执行同样查询
+  create index idx_order_id 
+  on orders(order_id); -- 创建索引
+
+5）索引的优缺点
+  - 优点：
+    能提高查询效率
+	唯一索引能够保证数据唯一性
+	能提高分组、排序的效率
+  - 缺点：
+    需要额外的存储空间
+	创建、维护索引结构需要额外的开销
+	降低增、删、改的效率
+	
+6）索引使用的注意事项
+  - 总体原则
+    合适的字段、建立合适的索引
+	索引不是越多越好
+	
+  - 适合使用索引的情况
+    在经常查询、排序、分组的列使用索引
+	数据分布相对均匀、连续的列适合使用索引
+	查询较多的表，适合使用索引
+	
+  - 不适合使用索引的情况
+    数据量较少的表
+	增、删、改操作较多的表
+	不经常用作查询条件的字段
+	取值范围较少的字段
+	二进制类型字段
+
+二、表的复制、重命名
+1）复制
+  将源表完全复制为新表
+  create table orders_new 
+  select * from orders;
+  
+  将源表部分复制到新表
+  create table orders_new 
+  select * from orders where amt<= 200;
+  
+  只复制表结构，不复制数据
+  create table orders_new 
+  select * from orders where 1=0;
+  
+  * 注意，这种方式复制不会把键的
+    属性复制过来
+
+2）重命名
+  格式：alter table 表名 
+  rename to 新表名
+  
+  示例：alter table orders 
+  rename to orders_new;
+
+二、数据库事务（重点）
+1. 什么是事务
+1）事务(Transaction)：执行一系列操作，
+   要么全都执行，要么全都不执行
+2）事务的作用：保证数据一致性、正确性
+   例如：0001账户向0002账户转账1000元，
+         要执行以下两个操作
+   操作1:0001转出
+     update acct 
+	 set balance = balance - 1000
+	 where acct_no = '0001';
+   转入：
+     update acct 
+	 set balance = balance + 1000
+	 where acct_no = '0002';
+   这两个操作，只能同时成功或同时失败  
+
+2. 事务的特征：事务有4个特征，习惯上
+   称为ACID特性（理解，记忆）
+   
+1）原子性(Atomicity): 一个事务是不可分割
+   的整体，要么全都执行，要么全都不执行
+
+2）一致性(Consistency): 事务完成后，从
+   一个一致性状态变成另一个一致性状态
+
+3）隔离性(Isolation): 不同的事务不相互
+   影响
+   
+4）持久性(Durability)：一旦事务提交，
+   对数据库的修改就会永久保存
+
+3. 使用事务的先决条件
+1）哪些情况需要使用事务
+  - 一个交易涉及多个增、删、改的操作
+  - 需要保证数据一致性
+2）MySQL下，要求表的存储引擎必须为
+   InnoDB类型
+
+4. MySQL如何操作事务
+1）启动事务
+  - 显式启动：start transaction
+  - 隐式启动：执行insert,update,delete
+    操作时自动开启
+2）提交事务：commit 
+3）回滚事务：rollback
+4）示例
+   create table acct(
+      acct_no varchar(32) primary key,
+	  acct_name varchar(64) not null,
+	  balance decimal(16,2) default 0 
+   );
+   insert into acct                  
+     values('0001', 'Jerry', 1000);
+   insert into acct 
+     values('0002', 'Tom', 2000);
+   -- 开启事务
+   start transaction;
+   update acct set balance = balance-100
+     where acct_no = '0001';
+   update acct set balance = balance+100
+     where acct_no = '0002';
+   commit; -- 第一次提交
+   -- rollback;   次二次回滚
+   
+5. 事务对哪些SQL语句起作用
+  SQL语句按照功能，分为四类：
+  - 数据查询语言(DQL)：查询数据
+  - 数据定义语言(DDL): 定以数据结构，如
+    创建、修改、删除库/表/索引
+  - 数据操作语言(DML): 数据增、删、改
+  - 数据控制语言(DCL): 权限管理，事务
+    控制，数据库监视等等
+	
+  * 只有数据操作语言(DML)可用于事务
+
+6. 事务对数据库性能的影响：会降低数据库
+   性能
+
+四、权限管理
+1. 概述
+1）什么是权限：数据库允许用户执行的操作
+2）分类
+  - 用户类：创建/删除用户、给用户授权
+  - 库/表操作：创建/删除/修改库或表
+  - 数据操作：增、删、改、查
+  
+3）MySQL中权限相关的表(mysql库下)：
+  - user表：最重要的权限表，存放用户、
+    密码、用户的权限
+  - db表：存放库的授权信息
+  - tables_priv表：存放表的授权信息
+  - columns_priv表：存放字段的授权信息
+  
+2. 权限操作
+1）授予权限
+  - 语法：
+    grant 权限列表 on 库名.表名
+    to '用户名'@'客户端地址'
+    [identified by '密码']
+    [with grant option]	
+  - 说明：
+    权限列表：all privileges  所有权限
+	          select,update,... 单个权限
+	数据库.表： 
+	   *.*     所有库下所有表
+	   eshop.* eshop库下所有表
+	   eshop.orders eshop库下orders表
+    客户端地址：
+	   %         所有客户端都可以访问
+	   localhost 只能从本机访问
+	   192.168.1.5  只能从该IP机器访问
+	identified by '密码'：设置用户密码
+	with grant option：有授权的权限
+
+  - 示例：创建Tom用户，只有eshop库下的
+    查询权限, 所有机器都可以登录
+	第一步：授权
+    grant select on eshop.*
+    to 'Tom'@'%' 
+    identified by '123456';
+    第二步：刷新  FLUSH privileges;
+    第三步：使用Tom用户登录，执行操作验证
+	        执行select成功，增删改失败
+			
+  - 练习：创建Jerry用户，拥有eshop库下所有表
+    的增删改查权限, 所有机器都可以登录	
+    grant select,insert,update,delete
+	on eshop.*
+    to 'Jerry'@'%' 
+    identified by '123456';  
+	
+2）吊销权限
+  - 语法：
+    revoke 权限列表 on 库名.表名
+	from '用户名'@'客户端地址'
+  - 示例：取消Jerry用户的update权限
+    revoke update on eshop.*
+	from 'Jerry'@'%';
+  
+3）查看权限
+  - 查看自己的权限：show grants;
+  - 查看别人的权限：
+    show grants for 'Tom'@'%';
+
+准备：pymysql
+安装：先装pip/pip3工具，通过该工具安装pymysql
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
